@@ -20,8 +20,17 @@ jobs:
       - name: Case list
         run: agentscan list
       - name: Smoke tests (36 cases, tool-hosted agent stub)
+        env:
+          LANG: C.UTF-8
+          LC_ALL: C.UTF-8
         run: python tests/test_smoke.py
       - name: Module tests (egress sink / MCP / probe / ollama parsing)
+        env:
+          LANG: C.UTF-8
+          LC_ALL: C.UTF-8
         run: python tests/test_modules.py
       - name: Code-scan tests (static audit rules)
+        env:
+          LANG: C.UTF-8
+          LC_ALL: C.UTF-8
         run: python tests/test_code_scan.py
