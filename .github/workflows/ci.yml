@@ -1,0 +1,24 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: pip install -e .
+      - name: Case list
+        run: agentscan list
+      - name: Smoke tests (36 cases, tool-hosted agent stub)
+        run: python tests/test_smoke.py
+      - name: Module tests (egress sink / MCP / probe / ollama parsing)
+        run: python tests/test_modules.py
+      - name: Code-scan tests (static audit rules)
+        run: python tests/test_code_scan.py

