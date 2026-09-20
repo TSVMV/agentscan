@@ -174,9 +174,17 @@ def stdio_tools_list(command: str, args: List[str], env: Optional[dict] = None,
     else:
         tools = (resp.get("result") or {}).get("tools") or []
     try:
-        proc.terminate()
+        proc.stdin.close()
     except Exception:
         pass
+    try:
+        proc.terminate()
+        proc.wait(timeout=2)
+    except Exception:
+        try:
+            proc.kill()
+        except Exception:
+            pass
     return tools, err
 
 
@@ -198,41 +206,41 @@ def _parse_body(r: requests.Response) -> Optional[dict]:
 
 def http_tools_list(url: str, timeout: float = 20.0) -> Tuple[Optional[List[dict]], Optional[str]]:
     """以 MCP 客户端身份通过 streamable HTTP 真实连接 server，返回 (tools, error)。"""
-    session = requests.Session()
-    headers = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
+    with requests.Session() as session:
+        headers = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
 
-    def post(payload: dict) -> requests.Response:
-        return session.post(url, json=payload, headers=headers, timeout=timeout)
+        def post(payload: dict) -> requests.Response:
+            return session.post(url, json=payload, headers=headers, timeout=timeout)
 
-    try:
-        r = post({"jsonrpc": "2.0", "id": 1, "method": "initialize",
-                  "params": {"protocolVersion": PROTOCOL_VERSION, "capabilities": {}, "clientInfo": CLIENT_INFO}})
-    except Exception as e:
-        return None, f"连接失败: {e}"
-    if r.status_code >= 400:
-        return None, f"initialize HTTP {r.status_code}"
-    obj = _parse_body(r)
-    if obj is None or "result" not in obj:
-        return None, "initialize 响应无法解析"
-    sid = r.headers.get("mcp-session-id")
-    if sid:
-        headers["mcp-session-id"] = sid
-    try:
-        post({"jsonrpc": "2.0", "method": "notifications/initialized"})
-    except Exception:
-        pass
-    try:
-        r2 = post({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
-    except Exception as e:
-        return None, f"tools/list 请求失败: {e}"
-    if r2.status_code >= 400:
-        return None, f"tools/list HTTP {r2.status_code}"
-    obj2 = _parse_body(r2)
-    if obj2 is None:
-        return None, "tools/list 响应无法解析"
-    if "error" in obj2:
-        return None, f"tools/list 错误: {obj2['error']}"
-    return (obj2.get("result") or {}).get("tools") or [], None
+        try:
+            r = post({"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                      "params": {"protocolVersion": PROTOCOL_VERSION, "capabilities": {}, "clientInfo": CLIENT_INFO}})
+        except Exception as e:
+            return None, f"连接失败: {e}"
+        if r.status_code >= 400:
+            return None, f"initialize HTTP {r.status_code}"
+        obj = _parse_body(r)
+        if obj is None or "result" not in obj:
+            return None, "initialize 响应无法解析"
+        sid = r.headers.get("mcp-session-id")
+        if sid:
+            headers["mcp-session-id"] = sid
+        try:
+            post({"jsonrpc": "2.0", "method": "notifications/initialized"})
+        except Exception:
+            pass
+        try:
+            r2 = post({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
+        except Exception as e:
+            return None, f"tools/list 请求失败: {e}"
+        if r2.status_code >= 400:
+            return None, f"tools/list HTTP {r2.status_code}"
+        obj2 = _parse_body(r2)
+        if obj2 is None:
+            return None, "tools/list 响应无法解析"
+        if "error" in obj2:
+            return None, f"tools/list 错误: {obj2['error']}"
+        return (obj2.get("result") or {}).get("tools") or [], None
 
 
 def analyze_tools(server: str, tools: List[dict]) -> List[dict]:

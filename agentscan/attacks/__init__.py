@@ -5,6 +5,7 @@
 
 from typing import List
 
+from ..core import AttackCase
 from .injection import CASES as _INJECTION
 from .leak import CASES as _LEAK
 from .sensitive import CASES as _SENSITIVE

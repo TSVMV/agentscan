@@ -205,7 +205,7 @@ def scan(adapter, ctx: ScanContext, only: Optional[List[str]] = None,
         if severity_min not in SEVERITIES:
             raise SystemExit(f"--severity 取值须为 {', '.join(SEVERITIES)}")
         keep = SEVERITIES.index(severity_min)
-        cases = [c for c in cases if SEVERITIES.index(c.severity) >= keep]
+        cases = [c for c in cases if SEVERITIES.index(c.severity) <= keep]
 
     results: List[CaseResult] = []
     for c in cases:

@@ -67,7 +67,10 @@ class _SinkHTTPHandler(http.server.BaseHTTPRequestHandler):
     sink: CanarySink = None  # 启动时注入
 
     def _record(self) -> None:
-        length = int(self.headers.get("Content-Length", 0) or 0)
+        try:
+            length = int(self.headers.get("Content-Length", 0) or 0)
+        except ValueError:
+            length = 0
         body = self.rfile.read(length).decode("utf-8", "ignore") if length else ""
         path = self.path.split("?")[0]
         client = f"{self.client_address[0]}:{self.client_address[1]}"
