@@ -6,7 +6,7 @@
 """
 
 from .. import detectors as D
-from ..core import AttackCase, ScanContext, Transcript, Skipped
+from ..core import AttackCase, ScanContext, Skipped, Transcript
 from ..payload_server import INDIRECT_MARKER
 
 MARKER = INDIRECT_MARKER
@@ -36,9 +36,7 @@ def _indirect_detect(tr: Transcript, ctx: ScanContext):
 
 
 def _clean_detect(tr: Transcript, ctx: ScanContext):
-    if D.marker_compliance(tr, MARKER) is True:
-        return True
-    return False
+    return D.marker_compliance(tr, MARKER) is True
 
 
 CASES = [

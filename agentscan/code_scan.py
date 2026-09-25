@@ -16,7 +16,7 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 from . import mcp_scan
 
@@ -29,7 +29,7 @@ BINARY_EXT = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".webp", ".pdf", ".zip", 
 EXFIL_RE = mcp_scan.EXFIL_ENDPOINTS_RE
 
 # 行级规则：(rule_id, severity, title, compiled regex)
-RULES: List[tuple] = [
+RULES: list[tuple] = [
     ("SEC-SK", "high", "疑似 OpenAI 风格密钥硬编码（sk-...）",
      re.compile(r"\bsk-[A-Za-z0-9_-]{16,}")),
     ("SEC-AWS", "high", "疑似 AWS Access Key 硬编码（AKIA...）",
@@ -101,7 +101,7 @@ def _read_text(path: str) -> Optional[str]:
             head = f.read(1024)
         if b"\x00" in head:
             return None
-        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+        with open(path, encoding="utf-8", errors="ignore") as f:
             return f.read()
     except OSError:
         return None
@@ -131,7 +131,7 @@ def _rel(root: str, path: str) -> str:
         return path
 
 
-def _line_findings(root: str, path: str, text: str, findings: List[dict]) -> None:
+def _line_findings(root: str, path: str, text: str, findings: list[dict]) -> None:
     rel = _rel(root, path)
     is_prompt_file = bool(PROMPT_MARK_RE.search(text)) and (
         "prompt" in rel.lower() or "system" in rel.lower() or "persona" in rel.lower())
@@ -153,8 +153,8 @@ def _line_findings(root: str, path: str, text: str, findings: List[dict]) -> Non
                          "evidence": "提示词文件命中凭据规则，详见同文件 SEC-* 条目"})
 
 
-def _structured_checks(root: str, files: List[str], text_of: Callable[[str], Optional[str]],
-                       findings: List[dict], notes: List[str]) -> None:
+def _structured_checks(root: str, files: list[str], text_of: Callable[[str], Optional[str]],
+                       findings: list[dict], notes: list[str]) -> None:
     for path in files:
         name = os.path.basename(path).lower()
         text = text_of(path)
@@ -204,10 +204,10 @@ def _structured_checks(root: str, files: List[str], text_of: Callable[[str], Opt
 def run(root: str, max_bytes: int = 512 * 1024) -> tuple:
     """执行项目静态审计，返回 (findings, notes)。"""
     root = _safe_path(root)
-    findings: List[dict] = []
-    notes: List[str] = []
-    files: List[str] = []
-    texts: Dict[str, Optional[str]] = {}
+    findings: list[dict] = []
+    notes: list[str] = []
+    files: list[str] = []
+    texts: dict[str, Optional[str]] = {}
     skipped = 0
     for path in _iter_files(root):
         if os.path.getsize(path) > max_bytes:
@@ -228,11 +228,11 @@ def run(root: str, max_bytes: int = 512 * 1024) -> tuple:
     return findings, notes
 
 
-def counts(findings: List[dict]) -> Dict[str, int]:
+def counts(findings: list[dict]) -> dict[str, int]:
     return {s: sum(1 for f in findings if f["severity"] == s) for s in ("high", "medium", "low")}
 
 
-def print_findings(root: str, findings: List[dict], notes: List[str]) -> None:
+def print_findings(root: str, findings: list[dict], notes: list[str]) -> None:
     for n in notes:
         print("  - " + n)
     print()
@@ -245,7 +245,7 @@ def print_findings(root: str, findings: List[dict], notes: List[str]) -> None:
     print(f"共 {len(findings)} 条发现: high {c['high']} / medium {c['medium']} / low {c['low']}（项目: {root}）")
 
 
-def write_markdown(path: str, root: str, findings: List[dict], notes: List[str]) -> str:
+def write_markdown(path: str, root: str, findings: list[dict], notes: list[str]) -> str:
     lines = ["# AgentScan 项目静态审计报告", "", f"- 项目: {root}", ""]
     c = counts(findings)
     lines.append(f"- 发现: **high {c['high']} / medium {c['medium']} / low {c['low']}**（共 {len(findings)} 条）")
@@ -270,7 +270,7 @@ def write_markdown(path: str, root: str, findings: List[dict], notes: List[str])
     return _write_text(path, "\n".join(lines))
 
 
-def write_json(path: str, root: str, findings: List[dict], notes: List[str]) -> str:
+def write_json(path: str, root: str, findings: list[dict], notes: list[str]) -> str:
     doc = {"root": root, "summary": counts(findings), "total": len(findings),
            "findings": findings, "notes": notes}
     return _write_text(path, json.dumps(doc, ensure_ascii=False, indent=2))

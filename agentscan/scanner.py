@@ -14,14 +14,14 @@
 
 import re
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import requests
 
 from . import tool_host
 from .adapter import AdapterError
 from .attacks import CATEGORIES, all_cases
-from .core import AttackCase, CaseResult, ScanContext, SEVERITIES, Skipped, Status, ToolCall, Transcript, Turn
+from .core import SEVERITIES, AttackCase, CaseResult, ScanContext, Skipped, Status, ToolCall, Transcript, Turn
 
 MAX_ROUNDS = 6
 MAX_TOOL_ROUNDS = 5
@@ -69,7 +69,7 @@ def _fill(text: str, ctx: ScanContext) -> str:
     return text
 
 
-def _followup_messages(res, tool_results: List[dict]) -> List[dict]:
+def _followup_messages(res, tool_results: list[dict]) -> list[dict]:
     """按目标响应格式构造工具结果回传消息（OpenAI 原生格式或通用格式）。"""
     raw_msg = None
     if getattr(res, "raw", None) and isinstance(res.raw, dict):
@@ -127,12 +127,12 @@ def run_case(adapter, case: AttackCase, ctx: ScanContext) -> CaseResult:
                 serve_page = "clean"
             tool_host.set_session(serve_file=serve_file, serve_page=serve_page)
         # 跨轮持久消息历史：工具交换的完整上下文对后续轮次可见（多轮注入用例依赖）
-        msgs: List[dict] = []
+        msgs: list[dict] = []
         for user_text in case.turns:
             filled = _fill(user_text, ctx)
             tr.turns.append(Turn(user=filled))
             msgs.append({"role": "user", "content": filled})
-            seen_calls: List[ToolCall] = []
+            seen_calls: list[ToolCall] = []
             content = ""
             for _ in range(MAX_TOOL_ROUNDS + 1):
                 tools = [t.to_openai() for t in tool_host.TOOL_LIST] if ctx.host_tools else None
@@ -140,7 +140,7 @@ def run_case(adapter, case: AttackCase, ctx: ScanContext) -> CaseResult:
                 http_status = res.http_status
                 if res.tool_calls and ctx.host_tools:
                     seen_calls.extend(res.tool_calls)
-                    exec_results: List[Dict[str, Any]] = []
+                    exec_results: list[dict[str, Any]] = []
                     for i, c in enumerate(res.tool_calls):
                         exec_results.append({"id": c.call_id or f"call_{len(seen_calls) + i}",
                                              "name": c.name,
@@ -192,9 +192,9 @@ def run_case(adapter, case: AttackCase, ctx: ScanContext) -> CaseResult:
                       transcript=tr, http_status=http_status, evidence=evidence)
 
 
-def scan(adapter, ctx: ScanContext, only: Optional[List[str]] = None,
+def scan(adapter, ctx: ScanContext, only: Optional[list[str]] = None,
          severity_min: Optional[str] = None, delay: float = 0.0,
-         on_done: Optional[Callable[[CaseResult], None]] = None) -> List[CaseResult]:
+         on_done: Optional[Callable[[CaseResult], None]] = None) -> list[CaseResult]:
     cases = all_cases()
     if only:
         bad = [m for m in only if m not in CATEGORIES]
@@ -207,7 +207,7 @@ def scan(adapter, ctx: ScanContext, only: Optional[List[str]] = None,
         keep = SEVERITIES.index(severity_min)
         cases = [c for c in cases if SEVERITIES.index(c.severity) <= keep]
 
-    results: List[CaseResult] = []
+    results: list[CaseResult] = []
     for c in cases:
         if ctx.target_kind == "unknown":
             probe_capability(adapter, ctx)

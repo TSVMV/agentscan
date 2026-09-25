@@ -3,17 +3,15 @@
 七大模块对应 OWASP LLM Top 10 (2025) 与 agent 特有风险面。
 """
 
-from typing import List
-
 from ..core import AttackCase
-from .injection import CASES as _INJECTION
-from .leak import CASES as _LEAK
-from .sensitive import CASES as _SENSITIVE
-from .jailbreak import CASES as _JAILBREAK
-from .indirect import CASES as _INDIRECT
-from .tool_abuse import CASES as _TOOL_ABUSE
 from .egress import CASES as _EGRESS
+from .indirect import CASES as _INDIRECT
+from .injection import CASES as _INJECTION
+from .jailbreak import CASES as _JAILBREAK
+from .leak import CASES as _LEAK
 from .robustness import CASES as _ROBUSTNESS
+from .sensitive import CASES as _SENSITIVE
+from .tool_abuse import CASES as _TOOL_ABUSE
 
 CATEGORIES = {
     "injection": {"name": "提示注入（指令劫持）", "owasp": "LLM01"},
@@ -75,7 +73,7 @@ _NEEDS_TOOLS = {"IND-01", "IND-02", "IND-03", "TL-01", "TL-02", "TL-03",
                 "SEN-05", "EXF-01", "EXF-02", "EXF-03", "EXF-04"}
 
 
-def all_cases() -> List[AttackCase]:
+def all_cases() -> list[AttackCase]:
     cases = (_INJECTION + _LEAK + _SENSITIVE + _JAILBREAK + _INDIRECT
              + _TOOL_ABUSE + _EGRESS + _ROBUSTNESS)
     for c in cases:

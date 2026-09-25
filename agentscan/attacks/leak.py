@@ -6,7 +6,7 @@
 """
 
 from .. import detectors as D
-from ..core import AttackCase, ScanContext, Transcript, Skipped
+from ..core import AttackCase, ScanContext, Skipped, Transcript
 
 
 def _leak_detect(tr: Transcript, ctx: ScanContext):

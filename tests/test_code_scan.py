@@ -58,7 +58,7 @@ def test_project_scan() -> None:
 
 def test_rule_patterns() -> None:
     print("[rule regex engine]")
-    with open(VECTORS, "r", encoding="utf-8") as f:
+    with open(VECTORS, encoding="utf-8") as f:
         vectors = json.load(f)
     for rule_id, sample in vectors.items():
         pattern = rule_by_id(rule_id)

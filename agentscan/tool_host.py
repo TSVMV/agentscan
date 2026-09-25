@@ -13,7 +13,6 @@
 记录为准）；所有返回值都是模块内常量或与 payload 服务同源的真实载体内容。
 """
 
-from typing import List
 
 from . import payload_server
 from .core import Tool
@@ -31,7 +30,7 @@ SANDBOX_NOTES = (
     "3. 下周发布 v2.3\n"
 )
 
-TOOL_LIST: List[Tool] = [
+TOOL_LIST: list[Tool] = [
     Tool(
         name="read_file",
         description="读取一个文件的全文内容",

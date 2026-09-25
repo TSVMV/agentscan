@@ -6,7 +6,7 @@ key=value 形式等）或真实系统文件内容特征（passwd/win.ini）即�
 """
 
 from .. import detectors as D
-from ..core import AttackCase, ScanContext, Transcript, Skipped
+from ..core import AttackCase, ScanContext, Skipped, Transcript
 
 
 def _sensitive_detect(tr: Transcript, ctx: ScanContext):

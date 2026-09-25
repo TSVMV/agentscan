@@ -10,6 +10,7 @@
   agentscan mcp-scan --url http://127.0.0.1:3000/mcp
 """
 
+import contextlib
 import difflib
 import json
 import os
@@ -18,7 +19,7 @@ import re
 import subprocess
 import threading
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Optional
 
 import requests
 
@@ -62,9 +63,9 @@ def _finding(server: str, tool: str, severity: str, title: str, evidence: str) -
 
 # ---------------- 静态审计 ----------------
 
-def load_servers(config_path: str) -> Dict[str, dict]:
+def load_servers(config_path: str) -> dict[str, dict]:
     """从配置文件读取 MCP server 定义，兼容 mcpServers / servers 键与顶层字典。"""
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:
         cfg = json.load(f)
     if isinstance(cfg, dict):
         for key in ("mcpServers", "mcp_servers", "servers"):
@@ -75,8 +76,8 @@ def load_servers(config_path: str) -> Dict[str, dict]:
     return {}
 
 
-def audit_server(name: str, spec: dict) -> List[dict]:
-    findings: List[dict] = []
+def audit_server(name: str, spec: dict) -> list[dict]:
+    findings: list[dict] = []
     cmd = str(spec.get("command") or "")
     args = " ".join(str(a) for a in spec.get("args", []))
     env = spec.get("env") or {}
@@ -127,8 +128,8 @@ def _recv_until(q: "queue.Queue[str]", deadline: float, want_id: Optional[int]) 
     return None
 
 
-def stdio_tools_list(command: str, args: List[str], env: Optional[dict] = None,
-                     timeout: float = 20.0) -> Tuple[Optional[List[dict]], Optional[str]]:
+def stdio_tools_list(command: str, args: list[str], env: Optional[dict] = None,
+                     timeout: float = 20.0) -> tuple[Optional[list[dict]], Optional[str]]:
     """以 MCP 客户端身份通过 stdio 真实连接 server，返回 (tools, error)。"""
     full_env = {**os.environ, **(env or {})}
     try:
@@ -137,7 +138,7 @@ def stdio_tools_list(command: str, args: List[str], env: Optional[dict] = None,
                                 text=True, encoding="utf-8", errors="replace", env=full_env)
     except Exception as e:
         return None, f"启动失败: {e}"
-    q: "queue.Queue[str]" = queue.Queue()
+    q: queue.Queue[str] = queue.Queue()
 
     def reader() -> None:
         try:
@@ -173,18 +174,14 @@ def stdio_tools_list(command: str, args: List[str], env: Optional[dict] = None,
         err = f"tools/list 错误: {resp['error']}"
     else:
         tools = (resp.get("result") or {}).get("tools") or []
-    try:
+    with contextlib.suppress(Exception):
         proc.stdin.close()
-    except Exception:
-        pass
     try:
         proc.terminate()
         proc.wait(timeout=2)
     except Exception:
-        try:
+        with contextlib.suppress(Exception):
             proc.kill()
-        except Exception:
-            pass
     return tools, err
 
 
@@ -204,7 +201,7 @@ def _parse_body(r: requests.Response) -> Optional[dict]:
         return None
 
 
-def http_tools_list(url: str, timeout: float = 20.0) -> Tuple[Optional[List[dict]], Optional[str]]:
+def http_tools_list(url: str, timeout: float = 20.0) -> tuple[Optional[list[dict]], Optional[str]]:
     """以 MCP 客户端身份通过 streamable HTTP 真实连接 server，返回 (tools, error)。"""
     with requests.Session() as session:
         headers = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
@@ -225,10 +222,8 @@ def http_tools_list(url: str, timeout: float = 20.0) -> Tuple[Optional[List[dict
         sid = r.headers.get("mcp-session-id")
         if sid:
             headers["mcp-session-id"] = sid
-        try:
+        with contextlib.suppress(Exception):
             post({"jsonrpc": "2.0", "method": "notifications/initialized"})
-        except Exception:
-            pass
         try:
             r2 = post({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         except Exception as e:
@@ -243,9 +238,9 @@ def http_tools_list(url: str, timeout: float = 20.0) -> Tuple[Optional[List[dict
         return (obj2.get("result") or {}).get("tools") or [], None
 
 
-def analyze_tools(server: str, tools: List[dict]) -> List[dict]:
+def analyze_tools(server: str, tools: list[dict]) -> list[dict]:
     """对真实枚举到的工具做描述投毒 / 外发端点 / 名称仿冒检测。"""
-    findings: List[dict] = []
+    findings: list[dict] = []
     for t in tools:
         name = str(t.get("name", ""))
         desc = str(t.get("description", ""))
@@ -286,7 +281,7 @@ def _safe_path(p: str) -> str:
     return norm
 
 
-def dump_json(findings: List[dict], notes: List[str], path: str) -> str:
+def dump_json(findings: list[dict], notes: list[str], path: str) -> str:
     """把扫描发现写入 JSON 文件（路径规范化校验后），返回实际路径。"""
     out = _safe_path(path)
     with open(out, "w", encoding="utf-8") as fp:
@@ -296,7 +291,7 @@ def dump_json(findings: List[dict], notes: List[str], path: str) -> str:
 
 def run(config: Optional[str] = None, url: Optional[str] = None,
         connect: bool = False, timeout: float = 20.0,
-        force_connect: bool = False) -> Tuple[List[dict], List[str]]:
+        force_connect: bool = False) -> tuple[list[dict], list[str]]:
     """执行扫描，返回 (findings, notes)。
 
     安全门：静态审计发现高危问题的 stdio server 默认不会被启动（避免执行不可信命令），
@@ -304,9 +299,9 @@ def run(config: Optional[str] = None, url: Optional[str] = None,
     """
     if config:
         config = _safe_path(config)
-    findings: List[dict] = []
-    notes: List[str] = []
-    tool_owner: Dict[str, List[str]] = {}  # 工具名 -> 提供它的 server 列表（遮蔽检测）
+    findings: list[dict] = []
+    notes: list[str] = []
+    tool_owner: dict[str, list[str]] = {}  # 工具名 -> 提供它的 server 列表（遮蔽检测）
     if config:
         servers = load_servers(config)
         if not servers:

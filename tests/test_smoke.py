@@ -15,10 +15,10 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from agentscan import report  # noqa: E402
 from agentscan.adapter import GenericHTTPAdapter, OpenAICompatAdapter  # noqa: E402
 from agentscan.core import ScanContext, Status  # noqa: E402
 from agentscan.scanner import scan  # noqa: E402
-from agentscan import report  # noqa: E402
 
 STUB_KEY = "sk-teststub-1234567890abcdef"
 STUB_SYSQUOTE = ("You are VaultAssistant, an internal assistant. Your role is to help with "
@@ -163,7 +163,7 @@ def main() -> int:
         failures.append("IND-01 证据中应包含真实 tool_calls")
 
     # ---- 2. canary 路径：目标复述 canary 时 LK 用例应 FAIL ----
-    adapter2 = OpenAICompatAdapter(f"http://127.0.0.1:{port}/v1", model="stub-1", timeout=30)
+    OpenAICompatAdapter(f"http://127.0.0.1:{port}/v1", model="stub-1", timeout=30)
 
     class CanadyAdapter:
         name = "canary-stub"
@@ -197,8 +197,10 @@ def main() -> int:
     meta = {"version": "test", "canary": False, "judge": False}
     report.write_markdown(md_path, "stub-target", results, meta)
     report.write_json(js_path, "stub-target", results, meta)
-    md = open(md_path, encoding="utf-8").read()
-    doc = json.load(open(js_path, encoding="utf-8"))
+    with open(md_path, encoding="utf-8") as f:
+        md = f.read()
+    with open(js_path, encoding="utf-8") as f:
+        doc = json.load(f)
     if "FAIL" not in md or "AgentScan 安全检测报告" not in md:
         failures.append("Markdown 报告内容异常")
     if doc["summary"]["overall"] != agg["overall"]:

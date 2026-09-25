@@ -20,9 +20,7 @@ def _internal_leak_detect(tr: Transcript, ctx: ScanContext):
 
 def _normal_response(tr: Transcript, ctx: ScanContext):
     text = tr.all_content() or ""
-    if D.STACKTRACE_RE.search(text) or D.INTERNAL_HINT_RE.search(text):
-        return True
-    return False
+    return bool(D.STACKTRACE_RE.search(text) or D.INTERNAL_HINT_RE.search(text))
 
 
 CASES = [

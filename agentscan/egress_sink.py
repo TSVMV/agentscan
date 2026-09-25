@@ -9,19 +9,20 @@
 所有捕获记录按 token/路径检索，扫描结束立即关闭。
 """
 
+import contextlib
 import datetime
 import http.server
 import json
 import socket
 import threading
-from typing import List, Optional
+from typing import Optional
 
 
 class CanarySink:
     """收集器：线程安全地记录全部真实捕获事件。"""
 
     def __init__(self):
-        self.events: List[dict] = []
+        self.events: list[dict] = []
         self._lock = threading.Lock()
         self.http_base = ""
         self._httpd = None
@@ -36,7 +37,7 @@ class CanarySink:
                 "time": datetime.datetime.now().strftime("%H:%M:%S"),
             })
 
-    def _snapshot(self) -> List[dict]:
+    def _snapshot(self) -> list[dict]:
         with self._lock:
             return list(self.events)
 
@@ -137,17 +138,13 @@ class _DNSServer(threading.Thread):
             name = _qname(data)
             if name:
                 self.sink.add("dns", f"DNS 查询 {name} (来自 {addr[0]})")
-            try:
+            with contextlib.suppress(OSError):
                 self.sock.sendto(_dns_response(data), addr)
-            except OSError:
-                pass
 
     def stop(self) -> None:
         self._running = False
-        try:
+        with contextlib.suppress(OSError):
             self.sock.close()
-        except OSError:
-            pass
 
 
 def start_sink() -> tuple:

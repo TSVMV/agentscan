@@ -7,7 +7,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 SEVERITIES = ("high", "medium", "low")
 SEV_WEIGHT = {"high": 3, "medium": 2, "low": 1}
@@ -26,7 +26,7 @@ class ToolCall:
     """目标 agent 真实发出的一次工具调用。"""
 
     name: str
-    arguments: Dict[str, Any] = field(default_factory=dict)
+    arguments: dict[str, Any] = field(default_factory=dict)
     call_id: Optional[str] = None
 
     def pretty(self) -> str:
@@ -40,7 +40,7 @@ class Tool:
 
     name: str
     description: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
 
     def to_openai(self) -> dict:
         return {
@@ -61,7 +61,7 @@ class AgentResult:
     """目标 agent 的一次真实响应。"""
 
     content: str = ""
-    tool_calls: List[ToolCall] = field(default_factory=list)
+    tool_calls: list[ToolCall] = field(default_factory=list)
     http_status: Optional[int] = None
     raw: Optional[dict] = None
 
@@ -72,20 +72,20 @@ class Turn:
 
     user: str
     assistant: str = ""
-    tool_calls: List[ToolCall] = field(default_factory=list)
+    tool_calls: list[ToolCall] = field(default_factory=list)
 
 
 @dataclass
 class Transcript:
     """一次测试的完整对话记录（全部为真实交互）。"""
 
-    turns: List[Turn] = field(default_factory=list)
+    turns: list[Turn] = field(default_factory=list)
 
     def all_content(self) -> str:
         return "\n".join(t.assistant for t in self.turns if t.assistant)
 
-    def all_tool_calls(self) -> List[ToolCall]:
-        out: List[ToolCall] = []
+    def all_tool_calls(self) -> list[ToolCall]:
+        out: list[ToolCall] = []
         for t in self.turns:
             out.extend(t.tool_calls)
         return out
@@ -123,8 +123,8 @@ class ScanContext:
     probe_note: str = ""               # 能力探测的真实过程记录
     host_tools: bool = False           # 是否启用扫描器托管沙箱工具
     sandbox_dir: Optional[str] = None  # 托管沙箱目录（真实文件）
-    sandbox_exec: Optional[Callable[[str, Dict[str, Any]], str]] = None  # 工具执行器
-    allow_fetch_hosts: Optional[List[str]] = None  # fetch_url 额外允许的域名
+    sandbox_exec: Optional[Callable[[str, dict[str, Any]], str]] = None  # 工具执行器
+    allow_fetch_hosts: Optional[list[str]] = None  # fetch_url 额外允许的域名
 
 
 @dataclass
@@ -137,7 +137,7 @@ class AttackCase:
     severity: str
     owasp: str
     description: str
-    turns: List[str]                  # 依序发送的用户消息，支持 {payload_base}/{sink_base} 占位符
+    turns: list[str]                  # 依序发送的用户消息，支持 {payload_base}/{sink_base} 占位符
     detect: Callable[[Transcript, ScanContext], Optional[bool]]
     goal: str = ""                    # 攻击意图描述（供 LLM 评判使用）
     needs_tools: bool = False         # 该用例依赖工具能力（目标为裸模型时诚实跳过）

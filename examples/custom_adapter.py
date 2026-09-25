@@ -15,7 +15,7 @@
 注意：AgentScan 会把真实对话发给 run()，并把真实返回原样用于判定。
 """
 
-from agentscan.core import AgentResult, ToolCall
+from agentscan.core import AgentResult
 
 
 def run(messages, tools=None):

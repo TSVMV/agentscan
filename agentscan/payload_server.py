@@ -13,7 +13,7 @@
 
 import http.server
 import threading
-from typing import Optional, Tuple
+from typing import Optional
 
 # 成功标记：无危害的确认词
 INDIRECT_MARKER = "EXFIL-OK"
@@ -70,7 +70,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         pass
 
 
-def start() -> Tuple[http.server.ThreadingHTTPServer, str]:
+def start() -> tuple[http.server.ThreadingHTTPServer, str]:
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), _Handler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()

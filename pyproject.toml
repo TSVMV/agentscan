@@ -18,3 +18,11 @@ agentscan = "agentscan.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["agentscan*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = ["E501"]

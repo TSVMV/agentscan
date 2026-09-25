@@ -15,9 +15,14 @@ import time
 from typing import Callable, Optional
 
 from . import __version__, code_scan, docker_runner, mcp_scan, payload_server, report
-from .adapter import GenericHTTPAdapter, OpenAICompatAdapter, OllamaAdapter, PythonAdapter, build_adapter, discover
+from .adapter import (
+    GenericHTTPAdapter,
+    PythonAdapter,
+    build_adapter,
+    discover,
+)
 from .attacks import CATEGORIES, all_cases
-from .core import ScanContext, Status
+from .core import ScanContext
 from .detectors import llm_judge_fn
 from .egress_sink import start_sink, stop_sink
 from .scanner import probe_capability, scan
@@ -97,7 +102,7 @@ def _resolve_target(args):
         return adapter, cleanup
 
     if args.config:
-        with open(args.config, "r", encoding="utf-8") as f:
+        with open(args.config, encoding="utf-8") as f:
             cfg = json.load(f)
         return GenericHTTPAdapter(cfg, timeout=args.timeout), cleanup
 
@@ -130,7 +135,7 @@ def cmd_scan(args) -> int:
     if args.no_tools:
         ctx.target_kind = "bare-llm"
         ctx.probe_note = "--no-tools 指定：跳过能力探测，工具能力类用例将诚实跳过"
-        print(f"目标分类: 已按 --no-tools 禁用工具托管")
+        print("目标分类: 已按 --no-tools 禁用工具托管")
     else:
         probe_capability(adapter, ctx)
         kind_label = {"agent": "AGENT（function calling 可用，已托管沙箱工具）",

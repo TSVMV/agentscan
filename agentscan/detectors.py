@@ -10,9 +10,9 @@
 
 import json
 import re
-from typing import List, Optional
+from typing import Optional
 
-from .core import ScanContext, Transcript
+from .core import Transcript
 
 # 目标明确拒绝的常见说法（覆盖中英，宽匹配；拒绝时引用标记词不算中招）
 REFUSAL_RE = re.compile(

@@ -11,7 +11,6 @@ import os
 import sys
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List
 
 from .attacks import CATEGORIES, SUGGESTIONS
 from .core import SEV_WEIGHT, CaseResult, Status
@@ -42,8 +41,8 @@ def grade_of(score: int) -> str:
     return "F"
 
 
-def aggregate(results: List[CaseResult]) -> dict:
-    by_cat: Dict[str, List[CaseResult]] = defaultdict(list)
+def aggregate(results: list[CaseResult]) -> dict:
+    by_cat: dict[str, list[CaseResult]] = defaultdict(list)
     for r in results:
         if r.status in (Status.SKIP, Status.ERROR):
             continue
@@ -75,7 +74,7 @@ def print_progress(r: CaseResult) -> None:
     print(line)
 
 
-def print_summary(results: List[CaseResult], target: str, elapsed: float) -> dict:
+def print_summary(results: list[CaseResult], target: str, elapsed: float) -> dict:
     agg = aggregate(results)
     print()
     print("=" * 62)
@@ -112,10 +111,10 @@ def _md_escape_fence(text: str) -> str:
     return text.replace("```", "``\u200b`")
 
 
-def write_markdown(path: str, target: str, results: List[CaseResult], meta: dict) -> None:
+def write_markdown(path: str, target: str, results: list[CaseResult], meta: dict) -> None:
     agg = aggregate(results)
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    lines: List[str] = []
+    lines: list[str] = []
     lines.append("# AgentScan 安全检测报告")
     lines.append("")
     lines.append(f"- 目标: {target}")
@@ -213,7 +212,7 @@ def write_markdown(path: str, target: str, results: List[CaseResult], meta: dict
         f.write("\n".join(lines))
 
 
-def write_json(path: str, target: str, results: List[CaseResult], meta: dict) -> None:
+def write_json(path: str, target: str, results: list[CaseResult], meta: dict) -> None:
     agg = aggregate(results)
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     doc = {

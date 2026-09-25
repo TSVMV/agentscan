@@ -7,10 +7,11 @@
 AgentScan 只负责启动、等待、清理，不注入任何虚拟数据。
 """
 
+import contextlib
 import socket
 import subprocess
 import time
-from typing import List, Optional
+from typing import Optional
 
 import requests
 
@@ -35,11 +36,11 @@ def _free_port() -> int:
     return port
 
 
-def _docker(args: List[str], timeout: int = 60) -> subprocess.CompletedProcess:
+def _docker(args: list[str], timeout: int = 60) -> subprocess.CompletedProcess:
     return subprocess.run(["docker"] + args, capture_output=True, text=True, timeout=timeout)
 
 
-def start(image: str, container_port: int, extra_args: Optional[List[str]] = None,
+def start(image: str, container_port: int, extra_args: Optional[list[str]] = None,
           host_port: Optional[int] = None, wait_timeout: int = 240) -> dict:
     """启动目标容器并等待端口可访问。返回 {container_id, host_port, url}。"""
     if not docker_available():
@@ -74,10 +75,8 @@ def start(image: str, container_port: int, extra_args: Optional[List[str]] = Non
 
 
 def stop(container_id: str) -> None:
-    try:
+    with contextlib.suppress(Exception):
         _docker(["rm", "-f", container_id], timeout=60)
-    except Exception:
-        pass
 
 
 def container_logs(container_id: str) -> str:

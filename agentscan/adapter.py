@@ -13,8 +13,7 @@ discover() 可对目标地址做真实探测，自动识别接口方言与可用
 """
 
 import json
-import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import requests
 
@@ -30,13 +29,13 @@ class BaseAdapter:
 
     name = "base"
 
-    def chat(self, messages: List[dict], tools: Optional[List[dict]] = None) -> AgentResult:
+    def chat(self, messages: list[dict], tools: Optional[list[dict]] = None) -> AgentResult:
         raise NotImplementedError
 
-    def list_models(self) -> List[str]:
+    def list_models(self) -> list[str]:
         return []
 
-    def followup_messages(self, res: AgentResult, tool_results: List[dict]) -> List[dict]:
+    def followup_messages(self, res: AgentResult, tool_results: list[dict]) -> list[dict]:
         """一轮工具调用后追加回对话的消息（simple 格式，子类可覆盖）。"""
         msgs = [{"role": "assistant", "content": res.content,
                  "tool_calls": [{"id": c.call_id or "", "name": c.name, "arguments": c.arguments}
@@ -50,8 +49,8 @@ def _http(status: int, body: str) -> AdapterError:
     return AdapterError(f"HTTP {status}: {body[:300]}")
 
 
-def _tool_calls_from_openai(msg: dict) -> List[ToolCall]:
-    calls: List[ToolCall] = []
+def _tool_calls_from_openai(msg: dict) -> list[ToolCall]:
+    calls: list[ToolCall] = []
     for c in msg.get("tool_calls") or []:
         fn = c.get("function", {})
         try:
@@ -62,9 +61,9 @@ def _tool_calls_from_openai(msg: dict) -> List[ToolCall]:
     return calls
 
 
-def _tool_calls_from_ollama(msg: dict) -> List[ToolCall]:
+def _tool_calls_from_ollama(msg: dict) -> list[ToolCall]:
     """解析 Ollama 原生 message.tool_calls（arguments 可能是 dict 或 JSON 字符串）。"""
-    calls: List[ToolCall] = []
+    calls: list[ToolCall] = []
     for i, c in enumerate(msg.get("tool_calls") or []):
         fn = c.get("function", {})
         args = fn.get("arguments")
@@ -95,8 +94,8 @@ class OpenAICompatAdapter(BaseAdapter):
         self.api_key = api_key
         self.timeout = timeout
 
-    def chat(self, messages: List[dict], tools: Optional[List[dict]] = None) -> AgentResult:
-        payload: Dict[str, Any] = {"model": self.model, "messages": messages, "stream": False}
+    def chat(self, messages: list[dict], tools: Optional[list[dict]] = None) -> AgentResult:
+        payload: dict[str, Any] = {"model": self.model, "messages": messages, "stream": False}
         if tools:
             payload["tools"] = tools
         headers = {"Content-Type": "application/json"}
@@ -122,7 +121,7 @@ class OpenAICompatAdapter(BaseAdapter):
             raw=data,
         )
 
-    def list_models(self) -> List[str]:
+    def list_models(self) -> list[str]:
         headers = {}
         if self.api_key:
             headers["Authorization"] = "Bearer " + self.api_key
@@ -148,7 +147,7 @@ class OllamaAdapter(BaseAdapter):
         self.model = model
         self.timeout = timeout
 
-    def chat(self, messages: List[dict], tools: Optional[List[dict]] = None) -> AgentResult:
+    def chat(self, messages: list[dict], tools: Optional[list[dict]] = None) -> AgentResult:
         payload = {"model": self.model, "messages": messages, "stream": False}
         try:
             resp = requests.post(self.base_url + "/api/chat", json=payload, timeout=self.timeout)
@@ -162,7 +161,7 @@ class OllamaAdapter(BaseAdapter):
         msg = data.get("message", {})
         return AgentResult(content=msg.get("content") or "", http_status=resp.status_code, raw=data)
 
-    def list_models(self) -> List[str]:
+    def list_models(self) -> list[str]:
         try:
             resp = requests.get(self.base_url + "/api/tags", timeout=10)
         except Exception:
@@ -220,7 +219,7 @@ class GenericHTTPAdapter(BaseAdapter):
         self.tool_calls_path = config.get("response_tool_calls_path")
         self.timeout = timeout
 
-    def chat(self, messages: List[dict], tools: Optional[List[dict]] = None) -> AgentResult:
+    def chat(self, messages: list[dict], tools: Optional[list[dict]] = None) -> AgentResult:
         last_user = next((m["content"] for m in reversed(messages) if m.get("role") == "user"), "")
 
         def fill(obj):
@@ -249,7 +248,7 @@ class GenericHTTPAdapter(BaseAdapter):
         except Exception as e:
             raise AdapterError(f"响应不是合法 JSON: {resp.text[:200]}") from e
         content = _walk_path(data, self.content_path)
-        calls: List[ToolCall] = []
+        calls: list[ToolCall] = []
         if self.tool_calls_path:
             for i, c in enumerate(_walk_path(data, self.tool_calls_path) or []):
                 calls.append(ToolCall(name=c.get("name", ""), arguments=c.get("arguments", {}), call_id=str(i)))
@@ -273,7 +272,7 @@ class PythonAdapter(BaseAdapter):
         self.fn = fn
         self.label = label
 
-    def chat(self, messages: List[dict], tools: Optional[List[dict]] = None) -> AgentResult:
+    def chat(self, messages: list[dict], tools: Optional[list[dict]] = None) -> AgentResult:
         out = self.fn([dict(m) for m in messages], tools=tools)
         if isinstance(out, AgentResult):
             return out
@@ -305,7 +304,7 @@ def discover(url: str, api_key: Optional[str] = None, timeout: int = 15) -> dict
     }
     """
     url = url.rstrip("/")
-    info: Dict[str, Any] = {"url": url, "alive": False, "server": None, "openai_base": None,
+    info: dict[str, Any] = {"url": url, "alive": False, "server": None, "openai_base": None,
                             "ollama": False, "models": [], "notes": []}
     headers = {}
     if api_key:
