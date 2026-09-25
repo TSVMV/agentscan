@@ -33,7 +33,7 @@ jobs:
         run: |
           VER=$(python -c "import tomllib,pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
           echo "version=$VER" >> "$GITHUB_OUTPUT"
-          if curl -sf "https://pypi.org/pypi/agentscan/$VER/json" >/dev/null 2>&1; then
+          if curl -sf "https://pypi.org/pypi/agentccx/$VER/json" >/dev/null 2>&1; then
             echo "skip_publish=true" >> "$GITHUB_OUTPUT"
             echo "Version $VER already on PyPI, skipping publish."
           else

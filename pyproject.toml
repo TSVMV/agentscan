@@ -3,7 +3,7 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agentscan"
+name = "agentccx"
 version = "0.5.0"
 description = "AgentScan —— AI Agent 安全检测平台：真实探测区分 AGENT 与裸模型，托管沙箱工具做注入/泄露/越权/外带（DNS+HTTP 金丝雀）/MCP 投毒多维检测，输出带真实证据的报告（支持本地与 docker 目标）"
 readme = "README.md"
